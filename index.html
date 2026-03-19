@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#3d5af1">
+<link rel="manifest" href="/manifest.json">
+<title>Dropp — تطبيق السائق</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f4f6fb;--white:#fff;--border:#e3e8f4;--border2:#cdd5ea;
+  --blue:#3d5af1;--blue-bg:#eef0fe;--blue-mid:#c5cbf7;
+  --green:#0cb87a;--green-bg:#e8faf3;--green-mid:#9de8cb;
+  --orange:#f07b00;--orange-bg:#fff4e5;--orange-mid:#fcd0a0;
+  --purple:#7c3aed;--purple-bg:#f3effe;--purple-mid:#c4b5fd;
+  --red:#e03f4f;--red-bg:#fdecea;
+  --text:#1c2240;--text2:#5a627f;--text3:#9ba3bf;
+  --r:14px;--rs:10px;
+  --sh:0 2px 10px rgba(61,90,241,.07);--sh2:0 4px 20px rgba(61,90,241,.12);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:'IBM Plex Sans Arabic',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:15px}
+.screen{display:none;min-height:100vh;flex-direction:column}
+.screen.active{display:flex;animation:fi .22s ease}
+@keyframes fi{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+
+/* LOGIN */
+#screen-login{justify-content:center;align-items:center;padding:28px;min-height:100vh;background:linear-gradient(150deg,#3d5af1,#6b3de0);position:relative;overflow:hidden}
+#screen-login::before{content:'';position:absolute;top:-80px;right:-80px;width:300px;height:300px;background:rgba(255,255,255,.08);border-radius:50%}
+#screen-login::after{content:'';position:absolute;bottom:-60px;left:-60px;width:240px;height:240px;background:rgba(255,255,255,.06);border-radius:50%}
+.lcard{width:100%;max-width:340px;z-index:1;text-align:center}
+.lmark{display:inline-flex;align-items:center;justify-content:center;width:72px;height:72px;background:rgba(255,255,255,.18);border-radius:20px;font-size:32px;margin-bottom:12px;border:1.5px solid rgba(255,255,255,.3)}
+.ltitle{font-size:26px;font-weight:800;color:#fff;margin-bottom:4px}.ltitle b{color:#ffd166}
+.lsub{color:rgba(255,255,255,.7);font-size:13px;margin-bottom:28px}
+.fg{margin-bottom:13px;text-align:right}
+.fl{display:block;font-size:12px;color:rgba(255,255,255,.75);margin-bottom:6px;font-weight:600}
+.fi{width:100%;background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.25);border-radius:var(--rs);padding:13px 15px;color:#fff;font-family:inherit;font-size:15px;outline:none;direction:rtl;transition:all .2s}
+.fi:focus{background:rgba(255,255,255,.22);border-color:rgba(255,255,255,.6)}.fi::placeholder{color:rgba(255,255,255,.4)}
+.bp{width:100%;padding:14px;background:#ffd166;border:none;border-radius:var(--rs);color:#1c2240;font-family:inherit;font-size:16px;font-weight:800;cursor:pointer;margin-top:6px;box-shadow:0 8px 20px rgba(0,0,0,.2);transition:transform .15s,opacity .2s}
+.bp:active{transform:scale(.98)}.bp:disabled{opacity:.5}
+
+/* TOPBAR */
+.topbar{background:var(--white);border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:var(--sh)}
+.tlogo{font-size:17px;font-weight:800;color:var(--blue)}
+.tavatar{width:34px;height:34px;background:linear-gradient(135deg,var(--blue),#6b3de0);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff}
+.tname{font-size:12px;font-weight:700}.tveh{font-size:11px;color:var(--text3)}
+.tright{display:flex;align-items:center;gap:9px}.tinfo{text-align:right}
+.spill{display:inline-flex;align-items:center;gap:7px;background:var(--bg);border:1.5px solid var(--border);border-radius:30px;padding:5px 12px 5px 8px;cursor:pointer}
+.sd{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.sd.av{background:var(--green);box-shadow:0 0 0 3px var(--green-bg)}.sd.bz{background:var(--orange);box-shadow:0 0 0 3px var(--orange-bg)}
+.st{font-size:12px;font-weight:700}.st.av{color:var(--green)}.st.bz{color:var(--orange)}
+.sc{font-size:11px;color:var(--text3);margin-right:3px}
+
+.pcontent{flex:1;overflow-y:auto;padding:14px 16px;padding-bottom:82px}
+
+/* ════════════════════════════
+   PROGRESS BAR CARD
+════════════════════════════ */
+.prog-card{background:linear-gradient(135deg,var(--blue),#6b3de0);border-radius:var(--r);padding:18px;margin-bottom:16px;color:#fff;box-shadow:var(--sh2)}
+.prog-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.prog-pct{font-size:30px;font-weight:800;font-family:'JetBrains Mono',monospace}
+.prog-bar{height:8px;background:rgba(255,255,255,.25);border-radius:4px;overflow:hidden;margin-bottom:14px}
+.prog-fill{height:100%;background:#ffd166;border-radius:4px;transition:width .6s ease}
+.prog-stats{display:flex;border-top:1px solid rgba(255,255,255,.2);padding-top:12px}
+.pst{flex:1;text-align:center}.pst+.pst{border-right:1px solid rgba(255,255,255,.2)}
+.psn{font-size:22px;font-weight:800;font-family:'JetBrains Mono',monospace}.psl{font-size:11px;opacity:.75;margin-top:1px}
+
+/* ════════════════════════════
+   DASHBOARD SECTIONS
+════════════════════════════ */
+.dash-section{background:var(--white);border:1.5px solid var(--border);border-radius:var(--r);margin-bottom:14px;overflow:hidden;box-shadow:var(--sh)}
+.dash-section-hd{padding:12px 16px;border-bottom:1.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg)}
+.dash-section-title{font-size:14px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:7px}
+.dash-section-count{font-size:12px;font-weight:600;background:var(--white);border:1px solid var(--border);padding:2px 10px;border-radius:20px;color:var(--text2)}
+
+/* location block inside section */
+.loc-block{border-bottom:1px solid var(--border)}
+.loc-block:last-child{border-bottom:none}
+.loc-hd{display:flex;align-items:center;gap:10px;padding:11px 16px;background:var(--bg);border-bottom:1px solid var(--border)}
+.loc-icon{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.loc-icon.store{background:var(--blue-bg)}
+.loc-icon.wh{background:var(--purple-bg)}
+.loc-icon.hub{background:var(--green-bg)}
+.loc-name{font-size:13px;font-weight:700;flex:1;color:var(--text)}
+.loc-type-badge{font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;flex-shrink:0}
+.ltb-store{background:var(--blue-bg);color:var(--blue)}
+.ltb-wh{background:var(--purple-bg);color:var(--purple)}
+.ltb-hub{background:var(--green-bg);color:var(--green)}
+.loc-mapbtn{font-size:11px;font-weight:600;color:var(--blue);background:var(--blue-bg);border:none;border-radius:6px;padding:3px 9px;cursor:pointer;font-family:inherit;flex-shrink:0}
+
+/* shipment mini-rows inside location */
+.ship-rows{padding:0 16px}
+.ship-mini-row{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--border)}
+.ship-mini-row:last-child{border-bottom:none}
+.smr-seq{width:20px;height:20px;border-radius:6px;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'JetBrains Mono',monospace}
+.smr-seq.wait{background:var(--orange-bg);color:var(--orange)}
+.smr-seq.got{background:var(--blue-bg);color:var(--blue)}
+.smr-seq.done{background:var(--green-bg);color:var(--green)}
+.smr-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.smr-dot.wait{background:var(--orange)}.smr-dot.got{background:var(--blue)}.smr-dot.done{background:var(--green)}
+.smr-id{font-size:12px;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--text)}
+.smr-arr{font-size:11px;color:var(--text3);flex-shrink:0}
+.dest-chip{font-size:11px;font-weight:700;padding:2px 8px;border-radius:5px;flex-shrink:0}
+.dc-wh{background:var(--purple-bg);color:var(--purple)}
+.dc-hub{background:var(--green-bg);color:var(--green)}
+.smr-status{font-size:11px;font-weight:600;margin-right:auto;text-align:left}
+.smr-status.wait{color:var(--orange)}.smr-status.got{color:var(--blue)}.smr-status.done{color:var(--green)}
+
+/* loc progress bar */
+.loc-prog{display:flex;align-items:center;gap:10px;padding:8px 16px;background:var(--bg)}
+.loc-prog-track{flex:1;height:5px;background:var(--border);border-radius:3px;overflow:hidden}
+.loc-prog-fill{height:100%;background:var(--green);border-radius:3px}
+.loc-prog-txt{font-size:11px;font-weight:600;color:var(--text2);white-space:nowrap}
+
+/* ════ DROPOFF ROWS ════ */
+.dropoff-rows{padding:0 16px}
+.dropoff-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s}
+.dropoff-row:last-child{border-bottom:none}
+.dropoff-seq{width:28px;height:28px;border-radius:9px;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'JetBrains Mono',monospace}
+.dseq-hub{background:var(--green-bg);color:var(--green)}
+.dseq-wh{background:var(--purple-bg);color:var(--purple)}
+.dseq-done{background:var(--green-bg);color:var(--green);font-size:16px}
+.dropoff-info{flex:1;min-width:0}
+.dropoff-dest{font-size:14px;font-weight:700;color:var(--text);margin-bottom:3px;display:flex;align-items:center;gap:6px}
+.dropoff-ids{font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dropoff-right{flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:5px}
+.cnt-pill{font-size:12px;font-weight:800;padding:3px 10px;border-radius:20px}
+.cp-hub{background:var(--green-bg);color:var(--green)}
+.cp-wh{background:var(--purple-bg);color:var(--purple)}
+.cp-done{background:var(--green-bg);color:var(--green)}
+.cp-wait{background:var(--orange-bg);color:var(--orange)}
+.handoff-btn{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;background:var(--green-bg);border:1px solid var(--green-mid);border-radius:7px;font-size:12px;font-weight:700;color:var(--green);cursor:pointer;font-family:inherit;transition:background .15s}
+.handoff-btn:active{background:var(--green-mid)}
+.wait-lbl{font-size:11px;color:var(--text3);font-weight:600}
+
+/* ════════════ STOP CARD (مهامي) ════════════ */
+.stop-card{background:var(--white);border:1.5px solid var(--border);border-radius:var(--r);margin-bottom:12px;overflow:hidden;box-shadow:var(--sh)}
+.stop-hd{display:flex;align-items:center;gap:12px;padding:13px 14px;cursor:pointer;user-select:none;transition:background .15s}
+.stop-hd:active{background:var(--bg)}
+.stop-num{width:42px;height:42px;border-radius:12px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff;font-family:'JetBrains Mono',monospace}
+.sn-ps{background:var(--blue)}.sn-pw{background:var(--purple)}.sn-dr{background:var(--green)}.sn-dn{background:var(--green-bg);color:var(--green);border:2px solid var(--green-mid);font-size:20px}
+.stop-info{flex:1;min-width:0}
+.stop-verb{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+.sv-ps{color:var(--blue)}.sv-pw{color:var(--purple)}.sv-dr{color:var(--green)}.sv-dn{color:var(--green)}
+.stop-locname{font-size:16px;font-weight:800;color:var(--text);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stop-locaddr{font-size:11px;color:var(--text3);margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stop-map{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;color:var(--blue);background:var(--blue-bg);border-radius:6px;padding:3px 9px;cursor:pointer;border:none;font-family:inherit}
+.stop-map:active{background:var(--blue-mid)}
+.stop-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0}
+.stop-badge{font-size:13px;font-weight:800;padding:4px 10px;border-radius:20px}
+.sb-ps{background:var(--blue-bg);color:var(--blue)}.sb-pw{background:var(--purple-bg);color:var(--purple)}.sb-dr{background:var(--green-bg);color:var(--green)}.sb-dn{background:var(--green-bg);color:var(--green)}
+.stop-chev{font-size:12px;color:var(--text3);transition:transform .2s}.stop-chev.open{transform:rotate(180deg)}
+
+.stop-body{border-top:1px solid var(--border)}
+.srow{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-bottom:1px solid var(--border);background:var(--white);cursor:pointer;transition:background .15s}
+.srow:last-child{border-bottom:none}.srow:active{background:var(--bg)}.srow.srdone{background:#fafcff}
+.sseq{width:26px;height:26px;border-radius:7px;flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;font-family:'JetBrains Mono',monospace}
+.sq0{background:var(--orange-bg);color:var(--orange)}.sq1{background:var(--blue-bg);color:var(--blue)}.sq2{background:var(--green-bg);color:var(--green)}.sq3{background:var(--red-bg);color:var(--red)}
+.smid{flex:1;min-width:0}
+.sid{font-size:13px;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--text);margin-bottom:6px}
+.route{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.lchip{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:700;border-radius:6px;padding:3px 8px;max-width:130px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lchip.store{background:var(--blue-bg);color:var(--blue)}.lchip.wh{background:var(--purple-bg);color:var(--purple)}.lchip.hub{background:var(--green-bg);color:var(--green)}
+.rarr{font-size:12px;color:var(--text3);flex-shrink:0}
+.sstatus{font-size:11px;font-weight:700;margin-top:5px}
+.ss0{color:var(--orange)}.ss1{color:var(--blue)}.ss2{color:var(--green)}.ss3{color:var(--red)}
+.sright{flex-shrink:0;display:flex;align-items:center}
+.btn-pick{background:var(--blue);color:#fff;border:none;border-radius:8px;padding:7px 12px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer}
+.btn-pick:active{opacity:.8}.sico{font-size:20px}
+.stop-handoff-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;padding:13px;background:linear-gradient(90deg,var(--green),#09a66a);color:#fff;border:none;cursor:pointer;font-family:inherit;font-size:14px;font-weight:800}
+.stop-handoff-btn:active{opacity:.85}.hbsub{font-size:11px;font-weight:500;opacity:.85}
+
+/* FILTER */
+.ftabs{display:flex;gap:7px;margin-bottom:13px;overflow-x:auto;padding-bottom:2px}
+.ftabs::-webkit-scrollbar{display:none}
+.ftab{padding:6px 14px;background:var(--white);border:1.5px solid var(--border);border-radius:20px;color:var(--text2);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
+.ftab.on{background:var(--blue);border-color:var(--blue);color:#fff}
+
+/* BOTTOM NAV */
+.bnav{position:fixed;bottom:0;left:0;right:0;background:var(--white);border-top:1.5px solid var(--border);display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom,0);box-shadow:0 -3px 12px rgba(0,0,0,.06)}
+.ni{flex:1;display:flex;flex-direction:column;align-items:center;padding:9px 4px;cursor:pointer;color:var(--text3);border:none;background:none;font-family:inherit;position:relative;gap:3px;transition:color .2s}
+.ni.on{color:var(--blue)}.nico{font-size:21px;line-height:1}.nlbl{font-size:10px;font-weight:700}
+.nbadge{position:absolute;top:6px;right:calc(50% - 18px);background:var(--red);color:#fff;font-size:10px;font-weight:800;min-width:17px;height:17px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 3px}
+
+/* CONFIRM */
+#screen-confirm{background:var(--bg);position:fixed;inset:0;z-index:500;display:none;flex-direction:column}
+#screen-confirm.active{display:flex;animation:fi .25s ease}
+.ctb{background:var(--white);border-bottom:1px solid var(--border);padding:13px 16px;display:flex;align-items:center;gap:12px;box-shadow:var(--sh)}
+.cbk{background:var(--bg);border:1.5px solid var(--border);border-radius:10px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;color:var(--text);flex-shrink:0}.cbk:active{background:var(--border)}
+.cttl{font-size:16px;font-weight:800;color:var(--text)}.csub{font-size:12px;color:var(--text3);margin-top:2px}
+.hbox{margin:14px 16px;background:var(--white);border:1.5px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh)}
+.hbox-hd{background:linear-gradient(90deg,var(--blue),#6b3de0);padding:13px 15px;color:#fff;display:flex;align-items:center;gap:10px}
+.hico{font-size:22px}.httl{font-size:14px;font-weight:800}.hsub{font-size:11px;opacity:.8;margin-top:1px}
+.hrows{max-height:150px;overflow-y:auto}
+.hrow{display:flex;align-items:center;gap:10px;padding:9px 15px;border-bottom:1px solid var(--border)}.hrow:last-child{border-bottom:none}
+.hseq{width:22px;height:22px;border-radius:6px;background:var(--blue-bg);color:var(--blue);font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;flex-shrink:0}
+.hid{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;color:var(--text2);flex:1}.hchk{font-size:16px}
+.steps{display:flex;align-items:center;justify-content:center;padding:12px 16px 4px}
+.cstep{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1}
+.cdot{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;transition:all .3s}
+.cdot.done{background:var(--green);color:#fff}.cdot.active{background:var(--blue);color:#fff;box-shadow:0 0 0 4px var(--blue-bg)}.cdot.idle{background:var(--bg);color:var(--text3);border:1.5px solid var(--border)}
+.clbl{font-size:10px;color:var(--text3);font-weight:700;text-align:center}.clbl.active{color:var(--blue)}
+.cline{flex:1;height:2px;background:var(--border);margin-top:14px;max-width:36px;transition:background .3s}.cline.done{background:var(--green)}
+.cpanel{display:none;flex:1;flex-direction:column;padding:14px 16px;gap:12px;overflow-y:auto}.cpanel.active{display:flex}
+.scan-mini{width:170px;height:170px;position:relative;border-radius:16px;overflow:hidden;background:#1c2240;margin:0 auto;cursor:pointer;box-shadow:var(--sh2)}
+.scan-mini video{width:100%;height:100%;object-fit:cover;display:none}
+.smph{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-size:12px;color:rgba(255,255,255,.45)}.smico{font-size:30px}
+.smcorners{position:absolute;inset:0;pointer-events:none}
+.smc{position:absolute;width:20px;height:20px;border-style:solid;border-width:0;border-color:#ffd166}
+.smc.tl{top:10px;right:10px;border-top-width:3px;border-right-width:3px;border-top-right-radius:3px}
+.smc.tr{top:10px;left:10px;border-top-width:3px;border-left-width:3px;border-top-left-radius:3px}
+.smc.bl{bottom:10px;right:10px;border-bottom-width:3px;border-right-width:3px;border-bottom-right-radius:3px}
+.smc.br{bottom:10px;left:10px;border-bottom-width:3px;border-left-width:3px;border-bottom-left-radius:3px}
+.smc-line{position:absolute;left:10px;right:10px;height:2px;background:linear-gradient(90deg,transparent,#ffd166,transparent);animation:vs 2s ease-in-out infinite;display:none}
+@keyframes vs{0%{top:12px;opacity:0}20%{opacity:1}80%{opacity:1}100%{top:calc(100% - 12px);opacity:0}}
+.vlist{display:flex;flex-direction:column;gap:5px}
+.vrow{display:flex;align-items:center;gap:8px;padding:8px 11px;background:var(--green-bg);border:1px solid var(--green-mid);border-radius:8px}
+.vrow-id{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--green);font-weight:700;flex:1}
+.mrow{display:flex;gap:8px}
+.mfi{flex:1;background:var(--white);border:1.5px solid var(--border);border-radius:var(--rs);padding:11px 13px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:14px;outline:none;direction:ltr}.mfi:focus{border-color:var(--blue)}
+.btn-chk{padding:11px 14px;background:var(--blue);color:#fff;border:none;border-radius:var(--rs);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap}
+.btn-nxt{width:100%;padding:14px;background:var(--blue);border:none;border-radius:var(--r);color:#fff;font-family:inherit;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 5px 16px rgba(61,90,241,.28)}.btn-nxt:disabled{opacity:.3;cursor:not-allowed}
+.notice{background:var(--orange-bg);border:1.5px solid var(--orange-mid);border-radius:var(--r);padding:13px 14px;display:flex;align-items:flex-start;gap:9px}
+.notic-ico{font-size:22px;flex-shrink:0;margin-top:1px}.notic-ttl{font-size:13px;font-weight:800;color:var(--orange);margin-bottom:3px}.notic-txt{font-size:12px;color:var(--text2);line-height:1.5}
+.recv-card{background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r);padding:13px 15px;display:flex;align-items:center;gap:11px}
+.recv-av{width:42px;height:42px;background:linear-gradient(135deg,var(--orange),#d46200);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.recv-nm{font-size:15px;font-weight:800;color:var(--text)}.recv-rl{font-size:12px;color:var(--text3);margin-top:2px}
+.pin-disp{display:flex;justify-content:center;gap:14px;padding:4px 0}
+.pdot{width:16px;height:16px;border-radius:50%;background:var(--border);border:2px solid var(--border2);transition:all .2s}
+.pdot.f{background:var(--blue);border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-bg)}.pdot.e{background:var(--red);border-color:var(--red)}.pdot.ok{background:var(--green);border-color:var(--green)}
+.pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;max-width:270px;margin:0 auto}
+.pkey{aspect-ratio:1;background:var(--white);border:1.5px solid var(--border);border-radius:13px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;font-size:22px;font-weight:800;gap:1px;transition:all .1s;box-shadow:0 2px 5px rgba(0,0,0,.05);color:var(--text)}
+.pkey:active{background:var(--blue-bg);border-color:var(--blue);transform:scale(.92)}.pkey.del{font-size:18px;color:var(--text3)}.pkey.z{grid-column:2}
+.psub{font-size:8px;color:var(--text3);letter-spacing:.8px;font-weight:700}
+.perr{text-align:center;color:var(--red);font-size:13px;font-weight:700;min-height:20px}.phint{text-align:center;font-size:11px;color:var(--text3)}.phint b{color:var(--blue)}
+.suc-panel{flex:1;display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px;gap:15px;text-align:center}.suc-panel.active{display:flex}
+.suc-ring{width:96px;height:96px;border-radius:50%;background:linear-gradient(135deg,var(--green),#09a66a);display:flex;align-items:center;justify-content:center;font-size:42px;box-shadow:0 14px 36px rgba(12,184,122,.28);animation:pop .4s cubic-bezier(.34,1.56,.64,1)}
+@keyframes pop{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+.suc-ttl{font-size:24px;font-weight:800;color:var(--text)}.suc-sub{font-size:14px;color:var(--text2);line-height:1.6}
+.suc-meta{background:var(--white);border:1.5px solid var(--border);border-radius:var(--r);padding:14px 16px;width:100%;box-shadow:var(--sh)}
+.suc-row{display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px solid var(--border)}.suc-row:last-child{border-bottom:none}
+.sk{color:var(--text2)}.sv{font-weight:800;color:var(--text)}
+.btn-done{width:100%;max-width:280px;padding:14px;background:linear-gradient(135deg,var(--green),#09a66a);border:none;border-radius:var(--r);color:#fff;font-family:inherit;font-size:16px;font-weight:800;cursor:pointer}
+
+/* DETAIL */
+.dhead{background:var(--white);padding:13px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;box-shadow:var(--sh)}
+.dbk{background:var(--bg);border:1.5px solid var(--border);border-radius:10px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;color:var(--text);flex-shrink:0}.dbk:active{background:var(--border)}
+.dttl{font-size:16px;font-weight:800;color:var(--text)}.dsub{font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace}
+.rcard{background:var(--white);border:1.5px solid var(--border);border-radius:var(--r);margin-bottom:12px;overflow:hidden;box-shadow:var(--sh)}
+.rhd{padding:11px 14px;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid var(--border);background:var(--bg)}
+.rleg{padding:14px;border-bottom:1px solid var(--border)}.rleg:last-child{border-bottom:none}
+.rleg-tag{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;display:flex;align-items:center;gap:5px}
+.rleg-tag.from{color:var(--orange)}.rleg-tag.to{color:var(--green)}
+.rleg-type{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;border-radius:6px;padding:3px 9px;margin-bottom:6px}
+.rleg-type.store{background:var(--blue-bg);color:var(--blue)}.rleg-type.wh{background:var(--purple-bg);color:var(--purple)}.rleg-type.hub{background:var(--green-bg);color:var(--green)}
+.rleg-name{font-size:17px;font-weight:800;color:var(--text);margin-bottom:3px}.rleg-addr{font-size:12px;color:var(--text2);margin-bottom:8px}
+.rleg-map{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--blue);background:var(--blue-bg);border:none;border-radius:8px;padding:6px 12px;cursor:pointer;font-family:inherit}
+.icard{background:var(--white);border:1.5px solid var(--border);border-radius:var(--r);margin-bottom:12px;overflow:hidden;box-shadow:var(--sh)}
+.ihd{padding:10px 14px;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid var(--border);background:var(--bg)}
+.irow{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border)}.irow:last-child{border-bottom:none}
+.ik{font-size:13px;color:var(--text2)}.iv{font-size:13px;font-weight:700;color:var(--text)}.iv.mono{font-family:'JetBrains Mono',monospace;font-size:12px;direction:ltr}
+.acsec{display:flex;flex-direction:column;gap:9px;padding-bottom:24px}
+.bac{width:100%;padding:14px;border:none;border-radius:var(--r);font-family:inherit;font-size:15px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;transition:transform .15s}.bac:active{transform:scale(.98)}
+.bac.blue{background:var(--blue);color:#fff;box-shadow:0 5px 16px rgba(61,90,241,.28)}.bac.green{background:var(--green);color:#fff;box-shadow:0 5px 16px rgba(12,184,122,.22)}
+
+/* SCAN */
+.scan-area{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;gap:20px}
+.vfinder{width:240px;height:240px;position:relative;border-radius:20px;overflow:hidden;background:#1c2240;cursor:pointer;box-shadow:var(--sh2)}
+.vcam{width:100%;height:100%;object-fit:cover;display:none}
+.vph{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;font-size:13px;color:rgba(255,255,255,.45)}.vph-ico{font-size:38px}
+.vcorners{position:absolute;inset:0;pointer-events:none}
+.vc{position:absolute;width:26px;height:26px;border-color:#ffd166;border-style:solid;border-width:0}
+.vc.tl{top:12px;right:12px;border-top-width:3px;border-right-width:3px;border-top-right-radius:4px}
+.vc.tr{top:12px;left:12px;border-top-width:3px;border-left-width:3px;border-top-left-radius:4px}
+.vc.bl{bottom:12px;right:12px;border-bottom-width:3px;border-right-width:3px;border-bottom-right-radius:4px}
+.vc.br{bottom:12px;left:12px;border-bottom-width:3px;border-left-width:3px;border-bottom-left-radius:4px}
+.vline{position:absolute;left:14px;right:14px;height:2px;background:linear-gradient(90deg,transparent,#ffd166,transparent);animation:vs 2s ease-in-out infinite;display:none}
+.divider{display:flex;align-items:center;gap:10px;color:var(--text3);font-size:12px;width:100%}
+.divider::before,.divider::after{content:'';flex:1;height:1.5px;background:var(--border)}
+.mrow2{display:flex;gap:8px;width:100%}
+.mfi2{flex:1;background:var(--white);border:1.5px solid var(--border);border-radius:var(--rs);padding:12px 13px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:14px;outline:none;direction:ltr}.mfi2:focus{border-color:var(--blue)}
+.btn-srch{padding:12px 16px;background:var(--blue);color:#fff;border:none;border-radius:var(--rs);font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap}
+.sec-ttl{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px}
+
+/* NOTIFS */
+.nitem{background:var(--white);border:1.5px solid var(--border);border-radius:var(--r);padding:13px;margin-bottom:9px;display:flex;gap:11px;align-items:flex-start;box-shadow:var(--sh)}
+.nibox{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.nibox.new{background:var(--blue-bg)}.nibox.upd{background:var(--orange-bg)}.nibox.msg{background:var(--green-bg)}
+.nibody{flex:1}.nittl{font-size:13px;font-weight:800;color:var(--text);margin-bottom:3px}.nitxt{font-size:12px;color:var(--text2);line-height:1.5}.nitm{font-size:11px;color:var(--text3);margin-top:4px}
+.nidot{width:8px;height:8px;background:var(--blue);border-radius:50%;flex-shrink:0;margin-top:5px}
+.empty{text-align:center;padding:52px 20px}.empty-ico{font-size:44px;margin-bottom:13px}.empty-txt{font-size:14px;font-weight:600;color:var(--text2)}
+.toast{position:fixed;bottom:88px;left:14px;right:14px;background:var(--white);border:1.5px solid var(--border);border-radius:var(--r);padding:12px 15px;display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600;z-index:600;opacity:0;transform:translateY(14px);transition:opacity .22s,transform .22s;pointer-events:none;box-shadow:var(--sh2)}
+.toast.on{opacity:1;transform:translateY(0)}.toast.suc{border-color:var(--green-mid)}.toast.err{border-color:#f5b8bb}.tico{font-size:18px}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="screen-login" class="screen active">
+  <div class="lcard">
+    <div class="lmark">🚚</div>
+    <div class="ltitle">Dropp <b>Express</b></div>
+    <div class="lsub">تطبيق السائق</div>
+    <div class="fg"><label class="fl">ID السائق أو رقم الجوال</label><input class="fi" id="li" placeholder="DRV-001" value="DRV-001"></div>
+    <div class="fg"><label class="fl">كلمة المرور</label><input class="fi" type="password" id="lp" placeholder="••••••••" value="1234"></div>
+    <button class="bp" id="lbtn" onclick="doLogin()">دخول ←</button>
+    <div style="color:rgba(255,255,255,.45);font-size:12px;margin-top:14px">🔒 بياناتك محفوظة بأمان</div>
+  </div>
+</div>
+
+<!-- HOME (DASHBOARD) -->
+<div id="screen-home" class="screen">
+  <div class="topbar">
+    <div class="tlogo">🚚 Dropp</div>
+    <div class="tright">
+      <div class="tinfo"><div class="tname">محمد الشهري</div><div class="tveh">🚗 ABX-1234</div></div>
+      <div class="tavatar">م</div>
+    </div>
+  </div>
+  <div class="pcontent">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;margin-top:2px">
+      <div><div style="font-size:12px;color:var(--text3);margin-bottom:2px" id="gtime">صباح الخير ☀️</div>
+        <div style="font-size:20px;font-weight:800;color:var(--text)">أهلاً، <span style="color:var(--blue)">محمد</span></div></div>
+      <div class="spill" onclick="toggleStatus()"><div class="sd av" id="spd"></div><span class="st av" id="spt">متاح</span><span class="sc">تغيير</span></div>
+    </div>
+
+    <!-- Progress -->
+    <div class="prog-card">
+      <div class="prog-top"><span style="font-size:13px;opacity:.85;font-weight:500">إنجاز اليوم</span><span class="prog-pct" id="ppct">0%</span></div>
+      <div class="prog-bar"><div class="prog-fill" id="pbar" style="width:0%"></div></div>
+      <div class="prog-stats">
+        <div class="pst"><div class="psn" id="hp">0</div><div class="psl">📦 للاستلام</div></div>
+        <div class="pst"><div class="psn" id="ht">0</div><div class="psl">🏭 للتسليم</div></div>
+        <div class="pst"><div class="psn" id="hd">0</div><div class="psl">✅ منجز</div></div>
+      </div>
+    </div>
+
+    <!-- PICKUP SECTION -->
+    <div class="dash-section" id="dash-pickup-section">
+      <div class="dash-section-hd">
+        <div class="dash-section-title">📦 الاستلام</div>
+        <span class="dash-section-count" id="dash-pickup-count">0 شحنات</span>
+      </div>
+      <div id="dash-pickup-body"></div>
+    </div>
+
+    <!-- DROPOFF SECTION -->
+    <div class="dash-section" id="dash-dropoff-section">
+      <div class="dash-section-hd">
+        <div class="dash-section-title">🏭 التسليم</div>
+        <span class="dash-section-count" id="dash-dropoff-count">0 شحنات</span>
+      </div>
+      <div class="dropoff-rows" id="dash-dropoff-body"></div>
+    </div>
+
+  </div>
+  <div class="bnav">
+    <button class="ni on" onclick="switchTab('home')"><span class="nico">🏠</span><span class="nlbl">الرئيسية</span></button>
+    <button class="ni" onclick="switchTab('shipments')"><span class="nico">📦</span><span class="nlbl">مهامي</span><span class="nbadge" id="badge-s">0</span></button>
+    <button class="ni" onclick="switchTab('scan')"><span class="nico">📷</span><span class="nlbl">سكان</span></button>
+    <button class="ni" onclick="switchTab('notifs')"><span class="nico">🔔</span><span class="nlbl">إشعارات</span><span class="nbadge">2</span></button>
+  </div>
+</div>
+
+<!-- SHIPMENTS -->
+<div id="screen-shipments" class="screen">
+  <div class="topbar"><div class="tlogo">📦 مهامي اليوم</div><span style="font-size:12px;color:var(--text2);font-weight:600" id="s-count"></span></div>
+  <div class="pcontent">
+    <div class="ftabs">
+      <button class="ftab on" onclick="setFilter('all',this)">الكل</button>
+      <button class="ftab" onclick="setFilter('pickup',this)">📦 استلام</button>
+      <button class="ftab" onclick="setFilter('dropoff',this)">🏭 تسليم</button>
+      <button class="ftab" onclick="setFilter('pending',this)">⏳ معلقة</button>
+      <button class="ftab" onclick="setFilter('done',this)">✅ منجزة</button>
+    </div>
+    <div id="ship-stops"></div>
+  </div>
+  <div class="bnav">
+    <button class="ni" onclick="switchTab('home')"><span class="nico">🏠</span><span class="nlbl">الرئيسية</span></button>
+    <button class="ni on" onclick="switchTab('shipments')"><span class="nico">📦</span><span class="nlbl">مهامي</span></button>
+    <button class="ni" onclick="switchTab('scan')"><span class="nico">📷</span><span class="nlbl">سكان</span></button>
+    <button class="ni" onclick="switchTab('notifs')"><span class="nico">🔔</span><span class="nlbl">إشعارات</span><span class="nbadge">2</span></button>
+  </div>
+</div>
+
+<!-- SCAN -->
+<div id="screen-scan" class="screen">
+  <div class="topbar"><div class="tlogo">📷 سكان الباركود</div></div>
+  <div class="scan-area">
+    <div class="vfinder" onclick="startCam('vcam','vph','vline')">
+      <div class="vph" id="vph"><div class="vph-ico">📷</div><div>اضغط للتشغيل</div></div>
+      <video id="vcam" class="vcam" autoplay playsinline></video>
+      <div class="vcorners"><div class="vc tl"></div><div class="vc tr"></div><div class="vc bl"></div><div class="vc br"></div><div class="vline" id="vline"></div></div>
+    </div>
+    <div class="divider">أو أدخل يدوياً</div>
+    <div class="mrow2"><input class="mfi2" id="mbar" placeholder="رقم الشحنة / الباركود"><button class="btn-srch" onclick="mainScan()">بحث</button></div>
+    <button class="bp" style="max-width:260px;background:var(--blue)" onclick="startCam('vcam','vph','vline')">📷 تشغيل الكاميرا</button>
+  </div>
+  <div class="bnav">
+    <button class="ni" onclick="switchTab('home')"><span class="nico">🏠</span><span class="nlbl">الرئيسية</span></button>
+    <button class="ni" onclick="switchTab('shipments')"><span class="nico">📦</span><span class="nlbl">مهامي</span></button>
+    <button class="ni on" onclick="switchTab('scan')"><span class="nico">📷</span><span class="nlbl">سكان</span></button>
+    <button class="ni" onclick="switchTab('notifs')"><span class="nico">🔔</span><span class="nlbl">إشعارات</span><span class="nbadge">2</span></button>
+  </div>
+</div>
+
+<!-- NOTIFS -->
+<div id="screen-notifs" class="screen">
+  <div class="topbar"><div class="tlogo">🔔 الإشعارات</div><button style="background:none;border:none;color:var(--text3);font-size:12px;cursor:pointer;font-family:inherit;font-weight:600" onclick="clearNotifs()">مسح الكل</button></div>
+  <div class="pcontent"><div id="notif-list"></div></div>
+  <div class="bnav">
+    <button class="ni" onclick="switchTab('home')"><span class="nico">🏠</span><span class="nlbl">الرئيسية</span></button>
+    <button class="ni" onclick="switchTab('shipments')"><span class="nico">📦</span><span class="nlbl">مهامي</span></button>
+    <button class="ni" onclick="switchTab('scan')"><span class="nico">📷</span><span class="nlbl">سكان</span></button>
+    <button class="ni on" onclick="switchTab('notifs')"><span class="nico">🔔</span><span class="nlbl">إشعارات</span></button>
+  </div>
+</div>
+
+<!-- DETAIL -->
+<div id="screen-detail" class="screen" style="overflow-y:auto">
+  <div class="dhead"><button class="dbk" onclick="goBack()">→</button>
+    <div><div class="dttl" id="d-title"></div><div class="dsub" id="d-id"></div></div></div>
+  <div class="pcontent" style="padding-bottom:36px"><div id="d-content"></div></div>
+</div>
+
+<!-- CONFIRM -->
+<div id="screen-confirm" class="screen">
+  <div class="ctb"><div class="cbk" onclick="closeConfirm()">→</div>
+    <div><div class="cttl">تسليم للمستودع</div><div class="csub" id="conf-dest"></div></div></div>
+  <div class="hbox">
+    <div class="hbox-hd"><div class="hico">📦</div>
+      <div><div class="httl" id="conf-cnt"></div><div class="hsub" id="conf-addr"></div></div></div>
+    <div class="hrows" id="conf-rows"></div></div>
+  <div class="steps">
+    <div class="cstep"><div class="cdot active" id="sd1">1</div><div class="clbl active" id="sl1">مسح السائق</div></div>
+    <div class="cline" id="ln1"></div>
+    <div class="cstep"><div class="cdot idle" id="sd2">2</div><div class="clbl" id="sl2">تأكيد المستلم</div></div>
+    <div class="cline" id="ln2"></div>
+    <div class="cstep"><div class="cdot idle" id="sd3">✓</div><div class="clbl" id="sl3">مكتمل</div></div>
+  </div>
+  <div class="cpanel active" id="cp1">
+    <div style="text-align:center;font-size:17px;font-weight:800;color:var(--text)">امسح الشحنات للتحقق</div>
+    <div style="text-align:center;font-size:13px;color:var(--text2)">امسح باركود كل شحنة قبل التسليم</div>
+    <div class="scan-mini" onclick="startCam('cvcam','cvph','cvline')">
+      <div class="smph" id="cvph"><div class="smico">📷</div><div>اضغط للمسح</div></div>
+      <video id="cvcam" class="vcam" autoplay playsinline></video>
+      <div class="smcorners"><div class="smc tl"></div><div class="smc tr"></div><div class="smc bl"></div><div class="smc br"></div><div class="smc-line" id="cvline"></div></div></div>
+    <div class="vlist" id="vlist"></div>
+    <div class="mrow"><input class="mfi" id="cmbar" placeholder="إدخال يدوي"><button class="btn-chk" onclick="confScan()">تحقق ✓</button></div>
+    <button class="btn-nxt" id="btn-nxt" onclick="goStep2()" disabled>التالي — تأكيد المستلم ←</button>
+  </div>
+  <div class="cpanel" id="cp2" style="align-items:center">
+    <div class="notice"><div class="notic-ico">📱</div>
+      <div><div class="notic-ttl">سلّم الجوال لموظف المستودع</div>
+        <div class="notic-txt">يحتاج المسؤول إدخال رمز التأكيد الخاص به لإتمام الاستلام</div></div></div>
+    <div class="recv-card"><div class="recv-av">🧑‍💼</div>
+      <div><div class="recv-nm" id="recv-nm"></div><div class="recv-rl" id="recv-rl"></div></div></div>
+    <div class="pin-disp"><div class="pdot" id="pd0"></div><div class="pdot" id="pd1"></div><div class="pdot" id="pd2"></div><div class="pdot" id="pd3"></div></div>
+    <div class="perr" id="perr"></div>
+    <div class="pin-pad">
+      <button class="pkey" onclick="pk('1')">1<span class="psub"></span></button><button class="pkey" onclick="pk('2')">2<span class="psub">ABC</span></button><button class="pkey" onclick="pk('3')">3<span class="psub">DEF</span></button>
+      <button class="pkey" onclick="pk('4')">4<span class="psub">GHI</span></button><button class="pkey" onclick="pk('5')">5<span class="psub">JKL</span></button><button class="pkey" onclick="pk('6')">6<span class="psub">MNO</span></button>
+      <button class="pkey" onclick="pk('7')">7<span class="psub">PQRS</span></button><button class="pkey" onclick="pk('8')">8<span class="psub">TUV</span></button><button class="pkey" onclick="pk('9')">9<span class="psub">WXYZ</span></button>
+      <button class="pkey z" onclick="pk('0')">0</button><button class="pkey del" onclick="pdel()">⌫</button></div>
+    <div class="phint">الرمز التجريبي: <b>1234</b></div>
+  </div>
+  <div class="suc-panel" id="cp3">
+    <div class="suc-ring">✅</div><div class="suc-ttl">تم التسليم!</div>
+    <div class="suc-sub" id="suc-sub"></div><div class="suc-meta" id="suc-meta"></div>
+    <button class="btn-done" onclick="finishHandoff()">العودة للمهام ✓</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"><span class="tico" id="tico">✅</span><span id="tmsg">تم</span></div>
+
+<script>
+// ════ LOCATIONS ════
+const LOCS={
+  'store-001':{type:'store',name:'متجر الأناقة',         addr:'الرياض، حي السليمانية، شارع العليا',         icon:'🏪'},
+  'store-002':{type:'store',name:'إلكترونيات الخليج',    addr:'الرياض، حي الروضة، شارع خالد بن الوليد',    icon:'🏪'},
+  'store-003':{type:'store',name:'سوق التقنية',           addr:'الرياض، حي العليا، طريق الملك فهد',          icon:'🏪'},
+  'store-004':{type:'store',name:'بيوتي كير',             addr:'الرياض، حي الياسمين، طريق أنس بن مالك',     icon:'🏪'},
+  'wh-main':  {type:'wh',  name:'مستودع Dropp الرئيسي', addr:'الرياض، المنطقة الصناعية، الدائري الشمالي', icon:'🏭',pin:'1234',recv:'أمين المستودع'},
+  'wh-south': {type:'wh',  name:'مستودع Dropp الجنوبي', addr:'الرياض، حي الشعلة، طريق الخرج',             icon:'🏭',pin:'5678',recv:'أمين المستودع'},
+  'hub-north':{type:'hub', name:'Hub-North',              addr:'الرياض، حي الملقا، مستودع H2',               icon:'📦',pin:'2222',recv:'موظف الاستلام'},
+  'hub-east': {type:'hub', name:'Hub-East',               addr:'الرياض، حي النرجس، مستودع H4',               icon:'📦',pin:'3333',recv:'موظف الاستلام'},
+  'hub-south':{type:'hub', name:'Hub-South',              addr:'الرياض، حي الشفاء، مستودع H5',               icon:'📦',pin:'4444',recv:'موظف الاستلام'},
+};
+
+const SHIPS=[
+  {id:'DRP-001',bc:'BC-001',from:'store-001',to:'wh-main',  status:'store_ready'},
+  {id:'DRP-002',bc:'BC-002',from:'store-001',to:'wh-main',  status:'store_ready'},
+  {id:'DRP-003',bc:'BC-003',from:'store-002',to:'wh-main',  status:'store_ready'},
+  {id:'DRP-004',bc:'BC-004',from:'store-002',to:'wh-main',  status:'store_ready'},
+  {id:'DRP-005',bc:'BC-005',from:'store-003',to:'hub-north',status:'store_ready'},
+  {id:'DRP-006',bc:'BC-006',from:'store-004',to:'hub-north',status:'registered'},
+  {id:'DRP-007',bc:'BC-007',from:'wh-main',  to:'hub-east', status:'registered'},
+  {id:'DRP-008',bc:'BC-008',from:'wh-main',  to:'hub-east', status:'registered'},
+  {id:'DRP-009',bc:'BC-009',from:'wh-main',  to:'hub-east', status:'received'},
+  {id:'DRP-010',bc:'BC-010',from:'wh-main',  to:'wh-south', status:'registered'},
+  {id:'DRP-011',bc:'BC-011',from:'wh-main',  to:'hub-south',status:'store_ready'},
+];
+
+const notifs=[
+  {id:1,type:'new',ico:'📦',title:'شحنات جديدة',     text:'تم إسناد 3 شحنات إلى Hub-East',          time:'منذ 5 دقائق', read:false},
+  {id:2,type:'msg',ico:'💬',title:'رسالة من المشرف', text:'تأكد من إغلاق مستودع H4 بعد التسليم',    time:'منذ 23 دقيقة',read:false},
+  {id:3,type:'upd',ico:'🔄',title:'تحديث مسار',      text:'تم تحديث عنوان Hub-North إلى مستودع H2', time:'منذ ساعة',    read:true},
+];
+const SL={store_ready:'بانتظار الاستلام',registered:'تم الاستلام — جاهز للتسليم',received:'تم التسليم ✓',failed:'فشل'};
+const TL={store:'متجر',wh:'مستودع رئيسي',hub:'Hub فرعي'};
+
+let cFilter='all',prevScr='shipments',driverOn=true,collapsed={};
+let confKey=null,confIds=[],confVer=[],pinV='',mainCam=null,confCam=null;
+
+const L=k=>LOCS[k]||{type:'wh',name:k,addr:'',icon:'📦'};
+const openMap=a=>window.open('https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(a),'_blank');
+
+// ════ LOGIN ════
+function doLogin(){
+  const b=document.getElementById('lbtn');b.textContent='⏳ جارٍ الدخول...';b.disabled=true;
+  setTimeout(()=>{showScr('home');renderDashboard();updateStats();updateGreeting();showToast('أهلاً محمد! 👋','✅','suc');},900);
+}
+
+// ════ SCREENS ════
+function showScr(n){document.querySelectorAll('.screen:not(#screen-confirm)').forEach(s=>s.classList.remove('active'));document.getElementById('screen-'+n).classList.add('active');}
+function switchTab(t){
+  prevScr=t;showScr(t);
+  if(t==='shipments'){renderStops('ship-stops',buildStops(fShips(cFilter)));updateCount();}
+  if(t==='notifs')renderNotifs();
+  if(t==='home'){renderDashboard();updateStats();}
+}
+function goBack(){showScr(prevScr);if(prevScr==='shipments'){renderStops('ship-stops',buildStops(fShips(cFilter)));updateCount();}if(prevScr==='home'){renderDashboard();updateStats();}stopCam(mainCam);mainCam=null;}
+function toggleStatus(){
+  driverOn=!driverOn;
+  document.getElementById('spd').className='sd '+(driverOn?'av':'bz');
+  const t=document.getElementById('spt');t.className='st '+(driverOn?'av':'bz');t.textContent=driverOn?'متاح':'في مهمة';
+  showToast(driverOn?'أنت الآن متاح':'أنت الآن في مهمة',driverOn?'🟢':'🟡');
+}
+
+// ════ FILTER / STOPS ════
+function fShips(f){
+  if(f==='pickup')  return SHIPS.filter(s=>s.status==='store_ready');
+  if(f==='dropoff') return SHIPS.filter(s=>s.status==='registered');
+  if(f==='pending') return SHIPS.filter(s=>!['received','failed'].includes(s.status));
+  if(f==='done')    return SHIPS.filter(s=>['received','failed'].includes(s.status));
+  return SHIPS;
+}
+function setFilter(f,btn){cFilter=f;document.querySelectorAll('.ftab').forEach(t=>t.classList.remove('on'));btn.classList.add('on');renderStops('ship-stops',buildStops(fShips(f)));updateCount();}
+
+function buildStops(list){
+  const pickMap={},dropMap={};
+  list.forEach(s=>{
+    const fl=L(s.from);
+    if(s.status==='store_ready'){
+      const k='pick::'+s.from;
+      if(!pickMap[k])pickMap[k]={kind:fl.type==='store'?'ps':'pw',fromKey:s.from,items:[]};
+      pickMap[k].items.push(s);
+    }else{
+      const k='drop::'+s.to;
+      if(!dropMap[k])dropMap[k]={kind:'dr',toKey:s.to,items:[]};
+      dropMap[k].items.push(s);
+    }
+  });
+  const all=[...Object.values(pickMap),...Object.values(dropMap)];
+  all.forEach((s,i)=>s.seq=i+1);
+  return all;
+}
+
+function renderStops(cid,stops,max){
+  const el=document.getElementById(cid);
+  if(!stops.length){el.innerHTML='<div class="empty"><div class="empty-ico">📭</div><div class="empty-txt">لا توجد مهام</div></div>';return;}
+  el.innerHTML=(max?stops.slice(0,max):stops).map(s=>buildStopCard(s,cid)).join('');
+}
+
+function buildStopCard(stop,cid){
+  const key=stop.kind+'::'+(stop.fromKey||stop.toKey);
+  const isCol=collapsed[key];
+  const done=stop.items.filter(s=>['received','failed'].includes(s.status)).length;
+  const total=stop.items.length;
+  const allDone=done===total;
+  const nc=allDone?'dn':stop.kind;
+  let locKey,verbTxt;
+  if(stop.kind!=='dr'){locKey=stop.fromKey;verbTxt=stop.kind==='ps'?'🏪 استلام من متجر':'🏭 استلام من مستودع';}
+  else{locKey=stop.toKey;verbTxt=L(locKey).type==='hub'?'📦 تسليم إلى Hub':'🏭 تسليم إلى مستودع';}
+  const l=L(locKey);
+  const sa=l.addr.replace(/'/g,"\\'");
+  const readyCnt=stop.kind==='dr'?stop.items.filter(s=>s.status==='registered').length:0;
+  const hBtn=readyCnt>0&&!allDone
+    ?`<button class="stop-handoff-btn" onclick="event.stopPropagation();startHandoff('${stop.toKey}')"><span>🤝</span><div><div>تسليم ${readyCnt} شحنة</div><div class="hbsub">${l.icon} ${l.name}</div></div></button>`:'';
+  const rows=stop.items.map((s,i)=>buildShipRow(s,i+1)).join('');
+  const domId='st'+key.replace(/[^a-z0-9]/gi,'_');
+  return `<div class="stop-card">
+  <div class="stop-hd" onclick="toggleStop('${key}','${cid}','${domId}')">
+    <div class="stop-num sn-${nc}">${allDone?'✓':stop.seq}</div>
+    <div class="stop-info">
+      <div class="stop-verb sv-${nc}">${verbTxt}</div>
+      <div class="stop-locname">${l.icon} ${l.name}</div>
+      <div class="stop-locaddr">${l.addr}</div>
+      <button class="stop-map" onclick="event.stopPropagation();openMap('${sa}')">📍 فتح الموقع ↗</button>
+    </div>
+    <div class="stop-right">
+      <span class="stop-badge sb-${nc}">${done}/${total}</span>
+      <span class="stop-chev${isCol?'':' open'}">▾</span>
+    </div>
+  </div>
+  <div id="${domId}" style="${isCol?'display:none':''}">
+    <div class="stop-body">${rows}</div>${hBtn}
+  </div>
+</div>`;
+}
+
+function buildShipRow(s,seq){
+  const isDone=['received','failed'].includes(s.status);
+  const fl=L(s.from),tl=L(s.to);
+  let sqC='sq0',stC='ss0';
+  if(s.status==='registered'){sqC='sq1';stC='ss1';}
+  if(s.status==='received'){sqC='sq2';stC='ss2';}
+  if(s.status==='failed'){sqC='sq3';stC='ss3';}
+  let action='';
+  if(!isDone){
+    if(s.status==='store_ready')action=`<button class="btn-pick" onclick="event.stopPropagation();doPickup('${s.id}')">📷 استلم</button>`;
+    else action=`<div style="font-size:11px;font-weight:700;color:var(--green);padding-top:2px">جاهز ✓</div>`;
+  }else action=`<div class="sico">${s.status==='received'?'✅':'❌'}</div>`;
+  return `<div class="srow${isDone?' srdone':''}" onclick="openDetail('${s.id}')">
+  <div class="sseq ${sqC}">${seq}</div>
+  <div class="smid">
+    <div class="sid">${s.id}</div>
+    <div class="route">
+      <span class="lchip ${fl.type}">${fl.icon} ${fl.name}</span>
+      <span class="rarr">→</span>
+      <span class="lchip ${tl.type}">${tl.icon} ${tl.name}</span>
+    </div>
+    <div class="sstatus ${stC}">${SL[s.status]}</div>
+  </div>
+  <div class="sright">${action}</div>
+</div>`;
+}
+function toggleStop(key,cid,domId){collapsed[key]=!collapsed[key];renderStops(cid,buildStops(fShips(cFilter)));}
+
+// ════ PICKUP ════
+function doPickup(id){
+  const s=SHIPS.find(x=>x.id===id);if(!s)return;
+  s.status='registered';
+  showToast('✅ تم استلام '+s.id,'✅','suc');
+  updateStats();
+  renderDashboard();
+  if(document.getElementById('screen-shipments').classList.contains('active'))
+    renderStops('ship-stops',buildStops(fShips(cFilter)));
+  updateCount();
+}
+
+// ════ HANDOFF ════
+function startHandoff(toKey){
+  const l=L(toKey);confKey=toKey;
+  confIds=SHIPS.filter(s=>s.to===toKey&&s.status==='registered').map(s=>s.id);
+  if(!confIds.length){showToast('لا توجد شحنات جاهزة للتسليم','ℹ️');return;}
+  confVer=[];pinV='';
+  document.getElementById('conf-dest').textContent=l.name;
+  document.getElementById('conf-cnt').textContent=confIds.length+' شحنة للتسليم';
+  document.getElementById('conf-addr').textContent=l.addr;
+  document.getElementById('recv-nm').textContent=l.name;
+  document.getElementById('recv-rl').textContent=l.recv||'موظف الاستلام';
+  document.getElementById('conf-rows').innerHTML=confIds.map((id,i)=>{
+    const s=SHIPS.find(x=>x.id===id),fl=L(s.from);
+    return `<div class="hrow"><div class="hseq">${i+1}</div><div class="hid">${s.id} <span style="color:var(--text3)">${fl.icon} ${fl.name}</span></div><div class="hchk" id="hc-${id}">○</div></div>`;
+  }).join('');
+  resetConf();document.getElementById('screen-confirm').classList.add('active');
+}
+function closeConfirm(){document.getElementById('screen-confirm').classList.remove('active');stopCam(confCam);confCam=null;}
+function resetConf(){
+  ['cp1','cp2'].forEach(p=>document.getElementById(p).classList.remove('active'));
+  document.getElementById('cp3').style.display='';document.getElementById('cp3').classList.remove('active');
+  ['sd1','sd2','sd3'].forEach(d=>document.getElementById(d).className='cdot idle');
+  ['sl1','sl2','sl3'].forEach(l=>document.getElementById(l).className='clbl');
+  ['ln1','ln2'].forEach(l=>document.getElementById(l).classList.remove('done'));
+  setStep(1);document.getElementById('cp1').classList.add('active');
+  document.getElementById('vlist').innerHTML='';document.getElementById('cmbar').value='';
+  document.getElementById('btn-nxt').disabled=true;updatePD();document.getElementById('perr').textContent='';
+}
+function setStep(n){for(let i=1;i<n;i++){document.getElementById('sd'+i).className='cdot done';document.getElementById('ln'+i)?.classList.add('done');}document.getElementById('sd'+n).className='cdot active';document.getElementById('sl'+n).className='clbl active';}
+function confScan(){
+  const v=document.getElementById('cmbar').value.trim();if(!v)return;
+  const s=SHIPS.find(x=>(x.id.toLowerCase()===v.toLowerCase()||x.bc.toLowerCase()===v.toLowerCase())&&confIds.includes(x.id));
+  if(!s){showToast('الشحنة ليست في هذا التسليم','❌','err');return;}
+  if(confVer.includes(s.id)){showToast('تم مسحها بالفعل','ℹ️');return;}
+  confVer.push(s.id);document.getElementById('hc-'+s.id).textContent='✅';
+  const r=document.createElement('div');r.className='vrow';r.innerHTML=`<span class="vrow-id">✅ ${s.id} · ${s.bc}</span>`;
+  document.getElementById('vlist').appendChild(r);document.getElementById('cmbar').value='';
+  if(confVer.length===confIds.length){document.getElementById('btn-nxt').disabled=false;showToast('جميع الشحنات تم التحقق ✅','✅','suc');}
+}
+function goStep2(){document.getElementById('cp1').classList.remove('active');document.getElementById('cp2').classList.add('active');setStep(2);stopCam(confCam);confCam=null;}
+function pk(k){if(pinV.length>=4)return;pinV+=k;updatePD();if(pinV.length===4)setTimeout(checkPin,300);}
+function pdel(){pinV=pinV.slice(0,-1);updatePD();document.getElementById('perr').textContent='';}
+function updatePD(){for(let i=0;i<4;i++){const d=document.getElementById('pd'+i);d.classList.toggle('f',i<pinV.length);d.classList.remove('e','ok');}}
+function checkPin(){
+  const l=L(confKey);
+  if(pinV===l.pin){for(let i=0;i<4;i++)document.getElementById('pd'+i).className='pdot ok';setTimeout(goStep3,500);}
+  else{for(let i=0;i<4;i++)document.getElementById('pd'+i).className='pdot e';document.getElementById('perr').textContent='الرمز غير صحيح';setTimeout(()=>{pinV='';updatePD();document.getElementById('perr').textContent='';},1200);}
+}
+function goStep3(){
+  confIds.forEach(id=>{const s=SHIPS.find(x=>x.id===id);if(s)s.status='received';});
+  document.getElementById('cp2').classList.remove('active');setStep(3);
+  const p3=document.getElementById('cp3');p3.style.display='flex';p3.classList.add('active');
+  const l=L(confKey),t=new Date(),ts=t.getHours()+':'+String(t.getMinutes()).padStart(2,'0');
+  document.getElementById('suc-sub').textContent=`تم تسليم ${confIds.length} شحنة إلى ${l.name} وتأكيدها`;
+  document.getElementById('suc-meta').innerHTML=`
+    <div class="suc-row"><span class="sk">الوجهة</span><span class="sv">${l.icon} ${l.name}</span></div>
+    <div class="suc-row"><span class="sk">النوع</span><span class="sv">${TL[l.type]}</span></div>
+    <div class="suc-row"><span class="sk">عدد الشحنات</span><span class="sv">${confIds.length}</span></div>
+    <div class="suc-row"><span class="sk">وقت التسليم</span><span class="sv">${ts}</span></div>
+    <div class="suc-row"><span class="sk">المستلم</span><span class="sv">${l.recv}</span></div>`;
+  updateStats();
+}
+function finishHandoff(){
+  document.getElementById('screen-confirm').classList.remove('active');document.getElementById('cp3').style.display='none';
+  renderDashboard();updateStats();
+  if(document.getElementById('screen-shipments').classList.contains('active'))
+    renderStops('ship-stops',buildStops(fShips(cFilter)));
+  updateCount();showToast('🎉 تم التسليم وتأكيده','✅','suc');
+}
+
+// ════ DETAIL ════
+function openDetail(id){
+  const s=SHIPS.find(x=>x.id===id);if(!s)return;
+  prevScr=document.querySelector('.screen:not(#screen-confirm).active').id.replace('screen-','');
+  showScr('detail');
+  const fl=L(s.from),tl=L(s.to);
+  document.getElementById('d-title').textContent='شحنة رقم '+s.id;
+  document.getElementById('d-id').textContent=s.bc;
+  const sf=fl.addr.replace(/'/g,"\\'"),st=tl.addr.replace(/'/g,"\\'");
+  const done=['received','failed'].includes(s.status);
+  let acts='<div class="acsec">';
+  if(!done){
+    if(s.status==='store_ready')acts+=`<button class="bac blue" onclick="doPickup('${s.id}');goBack()">📷 مسح واستلام الشحنة</button>`;
+    else acts+=`<button class="bac green" onclick="goBack();startHandoff('${s.to}')">🤝 تسليم مجموعة ${tl.name}</button>`;
+  }else acts+=`<div style="text-align:center;padding:16px;font-size:14px;font-weight:600;color:var(--text2)">${s.status==='received'?'✅ تم التسليم وتأكيده':'❌ فشل التسليم'}</div>`;
+  acts+='</div>';
+  document.getElementById('d-content').innerHTML=`
+  <div class="rcard"><div class="rhd">📍 مسار الشحنة</div>
+    <div class="rleg">
+      <div class="rleg-tag from">⬆ الاستلام من</div>
+      <div class="rleg-type ${fl.type}">${fl.icon} ${TL[fl.type]}</div>
+      <div class="rleg-name">${fl.name}</div><div class="rleg-addr">${fl.addr}</div>
+      <button class="rleg-map" onclick="openMap('${sf}')">📍 فتح على الخريطة ↗</button>
+    </div>
+    <div class="rleg">
+      <div class="rleg-tag to">⬇ التسليم إلى</div>
+      <div class="rleg-type ${tl.type}">${tl.icon} ${TL[tl.type]}</div>
+      <div class="rleg-name">${tl.name}</div><div class="rleg-addr">${tl.addr}</div>
+      <button class="rleg-map" onclick="openMap('${st}')">📍 فتح على الخريطة ↗</button>
+    </div>
+  </div>
+  <div class="icard"><div class="ihd">بيانات الشحنة</div>
+    <div class="irow"><span class="ik">رقم الشحنة</span><span class="iv mono">${s.id}</span></div>
+    <div class="irow"><span class="ik">الباركود</span><span class="iv mono">${s.bc}</span></div>
+    <div class="irow"><span class="ik">الحالة</span><span class="iv">${SL[s.status]}</span></div>
+  </div>${acts}`;
+}
+
+// ════ DASHBOARD ════
+function renderDashboard(){
+  // ── Pickup section ──
+  // group store_ready by from location
+  const pickMap={};
+  SHIPS.filter(s=>s.status==='store_ready').forEach(s=>{
+    if(!pickMap[s.from])pickMap[s.from]={fromKey:s.from,items:[]};
+    pickMap[s.from].items.push(s);
+  });
+  // also show already-picked (registered) items under their from location so driver sees full list
+  SHIPS.filter(s=>s.status==='registered').forEach(s=>{
+    if(!pickMap[s.from])pickMap[s.from]={fromKey:s.from,items:[]};
+    if(!pickMap[s.from].items.find(x=>x.id===s.id))pickMap[s.from].items.push(s);
+  });
+
+  const pickBlocks=Object.values(pickMap);
+  const totalPick=SHIPS.filter(s=>!['received','failed'].includes(s.status)&&LOCS[s.from]).length;
+  document.getElementById('dash-pickup-count').textContent=totalPick+' شحنة — '+pickBlocks.length+' موقع';
+
+  document.getElementById('dash-pickup-body').innerHTML=pickBlocks.map(b=>{
+    const l=L(b.fromKey);
+    const sa=l.addr.replace(/'/g,"\\'");
+    const doneInLoc=b.items.filter(s=>['received','failed'].includes(s.status)).length;
+    const gotInLoc=b.items.filter(s=>s.status==='registered').length;
+    const pct=b.items.length?Math.round((gotInLoc+doneInLoc)/b.items.length*100):0;
+    const rows=b.items.map((s,i)=>{
+      const tl=L(s.to);
+      const sc=s.status==='store_ready'?'wait':s.status==='registered'?'got':'done';
+      const stTxt=s.status==='store_ready'?'بانتظار الاستلام':s.status==='registered'?'تم الاستلام':'تم التسليم';
+      const dchip=tl.type==='hub'?`<span class="dest-chip dc-hub">${tl.icon} ${tl.name}</span>`:`<span class="dest-chip dc-wh">${tl.icon} ${tl.name}</span>`;
+      const btn=s.status==='store_ready'?`<button class="btn-pick" style="font-size:11px;padding:5px 9px" onclick="event.stopPropagation();doPickup('${s.id}')">📷 استلم</button>`:'';
+      return `<div class="ship-mini-row">
+        <div class="smr-seq ${sc}">${i+1}</div>
+        <div class="smr-dot ${sc}"></div>
+        <div class="smr-id">${s.id}</div>
+        <span class="smr-arr">→</span>
+        ${dchip}
+        <span class="smr-status ${sc}" style="margin-right:auto">${stTxt}</span>
+        ${btn}
+      </div>`;
+    }).join('');
+    return `<div class="loc-block">
+      <div class="loc-hd">
+        <div class="loc-icon ${l.type}">${l.icon}</div>
+        <div class="loc-name">${l.name}<br><span style="font-size:11px;font-weight:400;color:var(--text3)">${l.addr}</span></div>
+        <span class="loc-type-badge ltb-${l.type}">${l.type==='store'?'متجر':l.type==='hub'?'Hub':'مستودع'}</span>
+        <button class="loc-mapbtn" onclick="openMap('${sa}')">↗ خريطة</button>
+      </div>
+      <div class="ship-rows">${rows}</div>
+      <div class="loc-prog">
+        <div class="loc-prog-track"><div class="loc-prog-fill" style="width:${pct}%"></div></div>
+        <div class="loc-prog-txt">${gotInLoc+doneInLoc}/${b.items.length} مكتمل</div>
+      </div>
+    </div>`;
+  }).join('') || '<div style="padding:18px 16px;font-size:13px;color:var(--text3)">لا توجد شحنات للاستلام ✅</div>';
+
+  // ── Dropoff section ──
+  // group registered (ready to dropoff) by destination
+  const dropMap={};
+  SHIPS.forEach(s=>{
+    if(!dropMap[s.to])dropMap[s.to]={toKey:s.to,readyItems:[],doneItems:[]};
+    if(s.status==='registered')dropMap[s.to].readyItems.push(s);
+    if(['received','failed'].includes(s.status))dropMap[s.to].doneItems.push(s);
+  });
+
+  const dropBlocks=Object.values(dropMap).filter(b=>b.readyItems.length||b.doneItems.length);
+  const totalDrop=SHIPS.filter(s=>s.status==='registered').length;
+  document.getElementById('dash-dropoff-count').textContent=totalDrop+' شحنة — '+dropBlocks.length+' وجهة';
+
+  document.getElementById('dash-dropoff-body').innerHTML=`<div class="dropoff-rows">`+dropBlocks.map((b,idx)=>{
+    const tl=L(b.toKey);
+    const sa=tl.addr.replace(/'/g,"\\'");
+    const allDone=b.readyItems.length===0;
+    const seqCls=tl.type==='hub'?'dseq-hub':'dseq-wh';
+    const pillCls=tl.type==='hub'?'cp-hub':'cp-wh';
+    const ids=[...b.readyItems,...b.doneItems].map(s=>s.id).join(' · ');
+    const readyCnt=b.readyItems.length;
+    const doneCnt=b.doneItems.length;
+    const total=readyCnt+doneCnt;
+    let rightEl='';
+    if(allDone){
+      rightEl=`<span class="cnt-pill cp-done">✅ ${doneCnt}/${total}</span>`;
+    }else if(readyCnt>0){
+      rightEl=`<div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">
+        <span class="cnt-pill ${pillCls}">${readyCnt} جاهز</span>
+        <button class="handoff-btn" onclick="startHandoff('${b.toKey}')">🤝 تسليم</button>
+      </div>`;
+    }else{
+      rightEl=`<span class="cnt-pill cp-wait">بانتظار الاستلام</span>`;
+    }
+    return `<div class="dropoff-row" onclick="openMap('${sa}')">
+      <div class="dropoff-seq ${allDone?'dseq-done':seqCls}">${allDone?'✓':idx+1}</div>
+      <div class="dropoff-info">
+        <div class="dropoff-dest">${tl.icon} ${tl.name} <span style="font-size:10px;font-weight:600;padding:1px 7px;border-radius:4px;background:${tl.type==='hub'?'var(--green-bg)':'var(--purple-bg)'};color:${tl.type==='hub'?'var(--green)':'var(--purple)'}">${tl.type==='hub'?'Hub':'مستودع'}</span></div>
+        <div class="dropoff-ids">${ids}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px">📍 ${tl.addr}</div>
+      </div>
+      <div class="dropoff-right">${rightEl}</div>
+    </div>`;
+  }).join('')+'</div>'
+  || '<div style="padding:18px 16px;font-size:13px;color:var(--text3)">لا توجد شحنات للتسليم</div>';
+}
+
+// ════ STATS ════
+function updateStats(){
+  const p=SHIPS.filter(s=>s.status==='store_ready').length;
+  const t=SHIPS.filter(s=>s.status==='registered').length;
+  const d=SHIPS.filter(s=>['received','failed'].includes(s.status)).length;
+  document.getElementById('hp').textContent=p;
+  document.getElementById('ht').textContent=t;
+  document.getElementById('hd').textContent=d;
+  const pct=Math.round(d/SHIPS.length*100);
+  document.getElementById('ppct').textContent=pct+'%';
+  document.getElementById('pbar').style.width=pct+'%';
+  document.getElementById('badge-s').textContent=p+t;
+}
+function updateCount(){document.getElementById('s-count').textContent=fShips(cFilter).length+' شحنة';}
+
+// ════ CAMERA ════
+function startCam(vid,ph,line){
+  navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}).then(stream=>{
+    const v=document.getElementById(vid);if(vid==='cvcam')confCam=stream;else mainCam=stream;
+    v.srcObject=stream;v.style.display='block';document.getElementById(ph).style.display='none';document.getElementById(line).style.display='block';
+    showToast('الكاميرا شغّالة','📷','suc');
+  }).catch(()=>showToast('لم يتم السماح بالكاميرا','⚠️','err'));
+}
+function stopCam(s){if(s)s.getTracks().forEach(t=>t.stop());}
+function mainScan(){
+  const v=document.getElementById('mbar').value.trim();if(!v)return;
+  const s=SHIPS.find(x=>x.id.toLowerCase()===v.toLowerCase()||x.bc.toLowerCase()===v.toLowerCase());
+  if(s)openDetail(s.id);else showToast('لم يُعثر على الشحنة','❌','err');
+}
+
+// ════ NOTIFS ════
+function renderNotifs(){
+  document.getElementById('notif-list').innerHTML=notifs.map(n=>`
+  <div class="nitem"><div class="nibox ${n.type}">${n.ico}</div>
+  <div class="nibody"><div class="nittl">${n.title}</div><div class="nitxt">${n.text}</div><div class="nitm">${n.time}</div></div>
+  ${!n.read?'<div class="nidot"></div>':''}</div>`).join('');
+}
+function clearNotifs(){notifs.forEach(n=>n.read=true);renderNotifs();showToast('تم','🔔');}
+
+// ════ TOAST ════
+function showToast(msg,ico,type){
+  const t=document.getElementById('toast');document.getElementById('tmsg').textContent=msg;document.getElementById('tico').textContent=ico||'✅';
+  t.className='toast on '+(type==='suc'?'suc':type==='err'?'err':'');clearTimeout(t._x);t._x=setTimeout(()=>t.className='toast',3000);
+}
+function updateGreeting(){const h=new Date().getHours();document.getElementById('gtime').textContent=h<12?'صباح الخير ☀️':h<17?'مساء الخير 🌤️':'مساء النور 🌙';}
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&document.getElementById('screen-login').classList.contains('active'))doLogin();});
+updateGreeting();
+if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
+</script>
+</body>
+</html>
